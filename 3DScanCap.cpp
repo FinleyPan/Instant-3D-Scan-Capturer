@@ -1,19 +1,3 @@
-/*
--- Georgia Tech 2016 Spring
---
--- This is a sample code to show how to use the libfreenet2 with OpenCV
---
--- The code will streams RGB, IR and Depth images from an Kinect sensor.
--- To use multiple Kinect sensor, simply initial other "listener" and "frames"
-
--- This code refered from sample code provided from libfreenet2: Protonect.cpp
--- https://github.com/OpenKinect/libfreenect2
--- and another discussion from: http://answers.opencv.org/question/76468/opencvkinect-onekinect-for-windows-v2linuxlibfreenect2/
-
-
--- Contact: Chih-Yao Ma at <cyma@gatech.edu>
-*/
-
 //! [headers]
 #include <iostream>
 #include <stdio.h>
@@ -34,7 +18,6 @@
 #include <libfreenect2/logger.h>
 
 using namespace std;
-using namespace cv;
 
 bool protonect_shutdown = false; // Whether the running application should shut down.
 bool savePointClouds = false;
@@ -105,7 +88,7 @@ int main()
     libfreenect2::Frame undistorted(512, 424, 4), registered(512, 424, 4), depth2rgb(1920, 1080 + 2, 4); // check here (https://github.com/OpenKinect/libfreenect2/issues/337) and here (https://github.com/OpenKinect/libfreenect2/issues/464) why depth2rgb image should be bigger
     //! [registration setup]
 
-    Mat rgbmat, depthmat, depthmatUndistorted, irmat, rgbd, rgbd2;
+    cv::Mat rgbmat, rgbmatResized,rgbd2Resized, rgbd2;//,depthmat, depthmatUndistorted, irmat, rgbd;
 
     //! [loop start]
     while(!protonect_shutdown)
@@ -117,10 +100,11 @@ int main()
         //! [loop start]
 
         cv::Mat(rgb->height, rgb->width, CV_8UC4, rgb->data).copyTo(rgbmat);
-        cv::Mat(ir->height, ir->width, CV_32FC1, ir->data).copyTo(irmat);
-        cv::Mat(depth->height, depth->width, CV_32FC1, depth->data).copyTo(depthmat);
+        // cv::Mat(ir->height, ir->width, CV_32FC1, ir->data).copyTo(irmat);
+        // cv::Mat(depth->height, depth->width, CV_32FC1, depth->data).copyTo(depthmat);
 
-        cv::imshow("rgb", rgbmat);
+        cv::resize(rgbmat,rgbmatResized,cv::Size(rgbmat.cols/4,rgbmat.rows/4));
+        cv::imshow("rgb", rgbmatResized);
         // cv::imshow("ir", irmat / 4096.0f);
         // cv::imshow("depth", depthmat / 4096.0f);
 
@@ -128,13 +112,15 @@ int main()
         registration->apply(rgb, depth, &undistorted, &registered, true, &depth2rgb);
         //! [registration]
 
-        cv::Mat(undistorted.height, undistorted.width, CV_32FC1, undistorted.data).copyTo(depthmatUndistorted);
-        cv::Mat(registered.height, registered.width, CV_8UC4, registered.data).copyTo(rgbd);
+        // cv::Mat(undistorted.height, undistorted.width, CV_32FC1, undistorted.data).copyTo(depthmatUndistorted);
+        // cv::Mat(registered.height, registered.width, CV_8UC4, registered.data).copyTo(rgbd);
         cv::Mat(depth2rgb.height, depth2rgb.width, CV_32FC1, depth2rgb.data).copyTo(rgbd2);    
 
         // cv::imshow("undistorted", depthmatUndistorted / 4096.0f);
         // cv::imshow("registered", rgbd);
-        cv::imshow("depth2RGB", rgbd2 / 4096.0f);
+
+        cv::resize(rgbd2,rgbd2Resized,cv::Size(rgbd2.cols/4,rgbd2.rows/4));
+        cv::imshow("depth2RGB", rgbd2Resized / 4096.0f);
 
         if(savePointClouds)
         {
@@ -154,11 +140,11 @@ int main()
               {
                 float d = rgbd2.ptr<float> ( v+1 )[u]; 
                 if ( d== INFINITY ) continue; // inf means invalid depth value
-                Vec3d point;
+                cv::Vec3d point;
                 point[2] = double(d)/depthScale;
                 point[0] = (u-cx)*point[2]/fx;
                 point[1] = (v-cy)*point[2]/fy;
-                Vec3d pointWorld = point;
+                cv::Vec3d pointWorld = point;
 
                 PointT p ;
                 p.x = pointWorld[0];
@@ -171,7 +157,7 @@ int main()
               }
 
             pointCloud->is_dense = false;
-            cout<<"point cloud saved! Number of point:"<<pointCloud->size()<<endl;
+            printf("\033[36mpoint cloud saved! Number of point: %lu\033[0m\n",pointCloud->size());            
             pcl::io::savePCDFileBinary("map.pcd", *pointCloud ); 
             savePointClouds = false;
         }
