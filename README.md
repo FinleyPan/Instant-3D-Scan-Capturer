@@ -1,5 +1,6 @@
-# Instant-3D-Scan-Capturer
-Generate high-resolution, single-frame 3D scan instantly with [Kinect](https://en.wikipedia.org/wiki/Kinect) for Xbox one
+<p align = "center">
+<img src="https://github.com/FinleyPan/Instant-3D-Scan-Capturer/blob/master/result/view1.png" alt="view1" height="300"> <img src="https://github.com/FinleyPan/Instant-3D-Scan-Capturer/blob/master/result/view2.png" alt="view2" height="300">
+ </p>
 
 # Dependencies
 - CMake
